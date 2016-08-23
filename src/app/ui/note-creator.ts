@@ -1,7 +1,9 @@
 import { Component, Output, EventEmitter } from '@angular/core';
+import { ColorPicker } from './color-picker';
 
 @Component({
   selector: 'note-creator',
+  directives: [ColorPicker],
   styles: [`
     .note-creator {
       padding: 20px;
@@ -14,10 +16,32 @@ import { Component, Output, EventEmitter } from '@angular/core';
     }
   `],
   template: `
-    <div class="note-creator shadow-2">
-    <pre>{{ newNote | json }}</pre>
+    <div class="note-creator shadow-2" [ngStyle]="{'background-color': newNote.color}">
       <form class="row" (submit)="onCreateNote()">
-        <div class="actions col-xs-12 row between-xs">
+        <input 
+          type="text"
+          [(ngModel)] = "newNote.title"
+          name="newNoteTitle"
+          placeholder="Title"
+          class="col-xs-10 title"
+          *ngIf = "fullForm"
+        >
+        <input
+          type="text"
+          (focus) = "toggle(true)"
+          [(ngModel)] = "newNote.value"
+          name="newNoteValue"
+          placeholder="Take a note..."
+          class="col-xs-10"
+        >
+        <div class="actions col-xs-12 row between-xs" *ngIf = "fullForm">
+          <div class="col-xs-3">
+            <color-picker
+              (selected)="onColorSelect($event)" 
+              [colors]="colors">
+              (selected)  
+            </color-picker>
+          </div>
           <button
             type="submit"
             class="btn-light"
@@ -30,13 +54,38 @@ import { Component, Output, EventEmitter } from '@angular/core';
   `
 })
 export class NoteCreator {
-  @Output() createNote = new EventEmitter()
+  @Output() createNote = new EventEmitter();
+  colors: Array<string> = ['#B19CD9', '#FF6961', '#77DD77', '#AEC6CF', '#F49AC2', '#FFFFFF']
   newNote = {
     title: '',
-    value: ''
-  }
+    value: '',
+    color: '#FFFFFF'
+  };
+  fullForm: boolean = false;
+
+  onColorSelect(color: string) {
+    this.newNote.color = color;
+  };
 
   onCreateNote() {
-    console.log('submitted')
+    const { title, value, color } = this.newNote;
+
+    if (title && value) {
+      this.createNote.next({ title, value, color });
+      this.reset();
+    }
+  }
+
+//this reset function is pretty dope! Easy to implement, def copy this shiz!
+  reset() {
+    this.newNote = {
+    title: '',
+    value: '',
+    color: '#FFFFFF'
+    }
+  }
+
+  toggle(value: boolean) {
+    this.fullForm = value;
   }
 }
